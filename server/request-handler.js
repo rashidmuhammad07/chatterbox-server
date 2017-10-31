@@ -30,16 +30,7 @@ var defaultCorsHeaders = {
 };
 
 var messages = {
-  results: [
-    {
-      'objectId': 'fSL6sl2Xh7',
-      'username': 'asd',
-      'text': 'hgvghv',
-      'roomname': '4chan',
-      'createdAt': '2017-10-21T00:46:46.168Z',
-      'updatedAt': '2017-10-21T00:46:46.168Z'   
-    }
-  ]
+  results: []
 };
 
 var requestHandler = function(request, response) {
@@ -59,10 +50,10 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   // console.log('Serving request type ' + request.method + ' for url ' + request.url);
-
+  console.log(request.url);
   // The outgoing status.
   var statusCode = 200;
-
+  var responseBody = '';
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
 
@@ -74,21 +65,26 @@ var requestHandler = function(request, response) {
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  // response.writeHead(statusCode, headers);
 
 
 
   
   // If GET request, return messages in body of response
   if (request.method === 'GET') {
+    statusCode = 200;
     console.log('Phil is great');
-    response.end(JSON.stringify(messages));
+    responseBody = JSON.stringify(messages);
   }
 
-
   if (request.method === 'POST') {
+    statusCode = 201;
     let body = [];
-    request.on('data', (chunk) => {
+    request.on('error', (err) => {
+      statusCode = 404;
+      responseBody = err;
+
+    }).on('data', (chunk) => {
       body.push(chunk);
     }).on('end', () => {
       body = body.toString();
@@ -97,16 +93,22 @@ var requestHandler = function(request, response) {
       let text = bodyArr[1].split('=')[1];
       let roomname = bodyArr[2].split('=')[1];
       console.log(username, text, roomname);
-
+      
       var tempObject = {
-        objectId: 1,
+        objectId: Math.floor(Math.random() * 100000000000),
         username: username,
-        text: text,
+        text: decodeURIComponent((text + '').replace(/\+/g, '%20')),
         roomname: roomname,
         createdAt: new Date().toISOString(),
         updateAt: new Date().toISOString()
       };
-      console.log(tempObject);
+      messages.results.push(tempObject);
+     // console.log(messages.results);
+      //console.log(response);
+      // c
+      console.log(response);
+      responseBody = JSON.stringify(messages);
+      //console.log(tempObject);
       // at this point, `body` has the entire request body stored in it as a string
     });
 
@@ -130,7 +132,9 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+  // response.end('Hello, World!');
+  response.writeHead(statusCode, headers);
+  response.end(responseBody);
   
 };
 
