@@ -30,7 +30,15 @@ var defaultCorsHeaders = {
 };
 
 var messages = {
-  results: []
+  results: [
+    { objectId: 'fSL6sl2Xh7',
+      username: 'asd',
+      text: 'hgvghv',
+      roomname: '4chan',
+      createdAt: '2017-10-21T00:46:46.168Z',
+      updatedAt: '2017-10-21T00:46:46.168Z' 
+    }
+  ]
 };
 
 var requestHandler = function(request, response) {
@@ -65,25 +73,23 @@ var requestHandler = function(request, response) {
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  // response.writeHead(statusCode, headers);
+  response.writeHead(statusCode, headers);
 
 
 
   
   // If GET request, return messages in body of response
   if (request.method === 'GET') {
-    statusCode = 200;
     console.log('Phil is great');
-    responseBody = JSON.stringify(messages);
+    response.end(JSON.stringify(messages));
   }
 
   if (request.method === 'POST') {
     statusCode = 201;
     let body = [];
     request.on('error', (err) => {
-      statusCode = 404;
-      responseBody = err;
-
+      response.writeHead(404, headers);
+      response.end(err);
     }).on('data', (chunk) => {
       body.push(chunk);
     }).on('end', () => {
@@ -107,7 +113,7 @@ var requestHandler = function(request, response) {
       //console.log(response);
       // c
       console.log(response);
-      responseBody = JSON.stringify(messages);
+      response.end(JSON.stringify(messages));
       //console.log(tempObject);
       // at this point, `body` has the entire request body stored in it as a string
     });
@@ -133,8 +139,7 @@ var requestHandler = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
   // response.end('Hello, World!');
-  response.writeHead(statusCode, headers);
-  response.end(responseBody);
+  response.end(JSON.stringify(messages));
   
 };
 
