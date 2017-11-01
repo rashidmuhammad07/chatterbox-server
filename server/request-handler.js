@@ -1,3 +1,4 @@
+var querystring = require('querystring');
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -31,12 +32,11 @@ var defaultCorsHeaders = {
 
 var messages = {
   results: [
-    { objectId: 'fSL6sl2Xh7',
+    { 
+      objectId: 1,
       username: 'asd',
       text: 'hgvghv',
-      roomname: '4chan',
-      createdAt: '2017-10-21T00:46:46.168Z',
-      updatedAt: '2017-10-21T00:46:46.168Z' 
+      roomname: '4chan'
     }
   ]
 };
@@ -73,63 +73,38 @@ var requestHandler = function(request, response) {
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  // response.writeHead(statusCode, headers);
 
 
 
   
   // If GET request, return messages in body of response
   if (request.method === 'GET') {
-    console.log('Phil is great');
-    response.end(JSON.stringify(messages));
+    if (request.url.includes('/classes/messages')) {
+      statusCode = 200;
+      console.log('Phil is great');
+    } else {
+      statusCode = 404;
+      console.log('GET 404');
+    }
   }
 
   if (request.method === 'POST') {
     statusCode = 201;
-    let body = [];
-    request.on('error', (err) => {
-      response.writeHead(404, headers);
+    let body = '';
+    request.on('error', function (err) {
+      statusCode = 404;
       response.end(err);
-    }).on('data', (chunk) => {
-      body.push(chunk);
-    }).on('end', () => {
-      body = body.toString();
-      let bodyArr = body.split('&');
-      let username = bodyArr[0].split('=')[1];
-      let text = bodyArr[1].split('=')[1];
-      let roomname = bodyArr[2].split('=')[1];
-      console.log(username, text, roomname);
-      
-      var tempObject = {
-        objectId: Math.floor(Math.random() * 100000000000),
-        username: username,
-        text: decodeURIComponent((text + '').replace(/\+/g, '%20')),
-        roomname: roomname,
-        createdAt: new Date().toISOString(),
-        updateAt: new Date().toISOString()
-      };
+    }).on('data', function (chunk) {
+      body += chunk;
+    }).on('end', function () {
+      var tempObject = querystring.parse(body);
+      tempObject.objectId = Math.floor(Math.random() * 100000);
       messages.results.push(tempObject);
-     // console.log(messages.results);
-      //console.log(response);
-      // c
-      console.log(response);
-      response.end(JSON.stringify(messages));
-      //console.log(tempObject);
-      // at this point, `body` has the entire request body stored in it as a string
+      
+      console.log('tempObject', tempObject);
     });
-
-    // var obj = {};
-    // obj.objectId = request.objectId;
-    // obj.username = request.username;
-    // obj.text = request.text;
-    // obj.roomname = request.roomname;
-    // obj.createdAt = request.createdAt;
-    // obj.updateAt = request.updateAt;
-    // messages.results.push(obj);
   }
-
-
-
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -139,6 +114,9 @@ var requestHandler = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
   // response.end('Hello, World!');
+  response.writeHead(statusCode, headers);
+  //console.log(response);
+  console.log(messages);
   response.end(JSON.stringify(messages));
   
 };
