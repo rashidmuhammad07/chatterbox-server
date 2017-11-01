@@ -1,4 +1,4 @@
-var querystring = require('querystring');
+var querystring = require('querystring'); 
 /*************************************************************
 
 You should implement your request handler function in this file.
@@ -31,14 +31,7 @@ var defaultCorsHeaders = {
 };
 
 var messages = {
-  results: [
-    { 
-      objectId: 1,
-      username: 'asd',
-      text: 'hgvghv',
-      roomname: '4chan'
-    }
-  ]
+  results: []
 };
 
 var requestHandler = function(request, response) {
@@ -58,7 +51,7 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   // console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  console.log(request.url);
+  //console.log(request.url);
   // The outgoing status.
   var statusCode = 200;
   var responseBody = '';
@@ -85,25 +78,31 @@ var requestHandler = function(request, response) {
       console.log('Phil is great');
     } else {
       statusCode = 404;
-      console.log('GET 404');
+      //console.log('GET 404');
     }
   }
-
+  
   if (request.method === 'POST') {
-    statusCode = 201;
-    let body = '';
-    request.on('error', function (err) {
-      statusCode = 404;
-      response.end(err);
-    }).on('data', function (chunk) {
-      body += chunk;
-    }).on('end', function () {
-      var tempObject = querystring.parse(body);
-      tempObject.objectId = Math.floor(Math.random() * 100000);
-      messages.results.push(tempObject);
-      
-      console.log('tempObject', tempObject);
-    });
+    if (request.url.includes('/classes/messages')) {
+      statusCode = 201;
+      var body = '';
+      request.on('error', function (err) {
+        statusCode = 404;
+        response.end(err);
+      });
+  
+      request.on('data', function (chunk) {
+        body += chunk;
+      });
+
+      request.on('end', function () {
+        var tempObject = querystring.parse(body);
+        tempObject.objectId = Math.floor(Math.random() * 100000);
+        messages.results.push(tempObject);
+        
+      });
+    
+    }
   }
 
   // Make sure to always call response.end() - Node may not send
@@ -115,7 +114,6 @@ var requestHandler = function(request, response) {
   // node to actually send all the data over to the client.
   // response.end('Hello, World!');
   response.writeHead(statusCode, headers);
-  //console.log(response);
   console.log(messages);
   response.end(JSON.stringify(messages));
   
